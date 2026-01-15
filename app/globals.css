@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: white) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;               /* Chrome / Safari / Edge */
+}
+
+body {
+  scrollbar-width: none !important;       /* Firefox */
+  background: var(--background);
+  color: var(--foreground);
+  font-family: owners, paradroid-mono-soft, Arial, Helvetica, sans-serif;
+}
+
+
+/* Ocultar scrollbar en navegadores modernos */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari y Opera */
+}
+
+/* styles/globals.css (o el archivo global que uses) */
+
+/* Estado inicial: todos los items del archive arrancan ocultos + blur + desplazados */
+.archive-item {
+  opacity: 0;
+  transform: translateY(30px);
+  filter: blur(10px);
+  will-change: opacity, transform, filter;
+}
+
+/* (opcional) clase para forzar visible si alguna vez la quieres desde CSS */
+.archive-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+
+/* Oculta scrollbars sin afectar el comportamiento nativo */
+html.lenis {
+  scrollbar-width: none; /* Firefox */
+}
+
+html.lenis::-webkit-scrollbar {
+  display: none; /* Chrome / Edge / Safari */
+}
+
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE / Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / Edge */
+}
+
