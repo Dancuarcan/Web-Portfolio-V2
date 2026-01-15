@@ -427,7 +427,7 @@ export const archiveItems = [
 
   {
     type: "image",
-    src: "/archive/images/parking_lot.jpg",
+    src: "/archive/images/Parking_lot.jpg",
     alt: "PARKING LOT",
     year: 2025,
     category: "PHOTOGRAPHY",
