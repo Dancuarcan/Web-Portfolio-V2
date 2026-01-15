@@ -246,6 +246,8 @@ useEffect(() => {
                 muted
                 loop
                 playsInline
+                width={item.width}
+                height={item.height}
                 preload="none"
                 poster="/placeholder.png"
                 className="w-full h-auto object-cover"
