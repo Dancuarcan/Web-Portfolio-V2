@@ -248,7 +248,7 @@ useEffect(() => {
                 playsInline
                 width={item.width}
                 height={item.height}
-                preload="none"
+                preload="auto"
                 poster="/placeholder.png"
                 className="w-full h-auto object-cover"
                 controls={false}
