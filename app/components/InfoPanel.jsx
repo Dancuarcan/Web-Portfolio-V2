@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
-import Lenis from "@studio-freight/lenis";
+import Lenis from "lenis";
 import { useInfoPanel } from "./InfoPanelContext";
 
 export default function InfoPanel() {
