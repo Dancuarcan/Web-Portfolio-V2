@@ -12,20 +12,13 @@ export default function ArchivePage() {
   const containerRef = useRef(null);
   const { isLoading } = useLoading();
 
-  // Hover
   const [activeItem, setActiveItem] = useState(null);
-
-  // Focus (click)
   const [focusedItem, setFocusedItem] = useState(null);
-
   const hideTimeout = useRef(null);
-
-  // Mobile detect
   const [isMobile, setIsMobile] = useState(false);
+  const [loadedItems, setLoadedItems] = useState(new Set());
 
-  // ---------------------------------------------------------
-  // 0) Detect mobile
-  // ---------------------------------------------------------
+  // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
@@ -33,15 +26,10 @@ export default function ArchivePage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // ---------------------------------------------------------
-  // 1) Refresh Lenis on media load
-  // ---------------------------------------------------------
+  // Refresh Lenis on media load
   useEffect(() => {
     if (!containerRef.current || isLoading) return;
-
-    const refresh = () => {
-      if (window.__lenis) window.__lenis.resize();
-    };
+    const refresh = () => window.__lenis?.resize();
 
     const imgs = containerRef.current.querySelectorAll("img");
     const vids = containerRef.current.querySelectorAll("video");
@@ -57,12 +45,9 @@ export default function ArchivePage() {
     };
   }, [isLoading]);
 
-  // ---------------------------------------------------------
-  // 2) Fade-in + blur on scroll
-  // ---------------------------------------------------------
+  // Fade-in + blur on scroll
   useEffect(() => {
     if (!containerRef.current || isLoading) return;
-
     const items = containerRef.current.querySelectorAll(".archive-item");
     gsap.set(items, { autoAlpha: 0, filter: "blur(35px)" });
 
@@ -85,7 +70,6 @@ export default function ArchivePage() {
             stagger: 0.06,
           });
         }
-
         if (leaving.length) {
           gsap.to(leaving, {
             autoAlpha: 0,
@@ -102,49 +86,57 @@ export default function ArchivePage() {
     return () => io.disconnect();
   }, [isLoading]);
 
-  // ---------------------------------------------------------
-  // 3) Lazy video load + play / pause
-  // ---------------------------------------------------------
+  // Lazy video load + placeholder
   useEffect(() => {
     if (!containerRef.current) return;
-
     const videos = containerRef.current.querySelectorAll("video[data-src]");
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const video = entry.target;
+    videos.forEach((video) => {
+      const parentDiv = video.parentElement;
 
-          if (!(video instanceof HTMLVideoElement)) return;
-
-          if (entry.isIntersecting) {
-            if (!video.src) {
-              video.src = video.dataset.src;
-              video.load();
-            }
-            video.play().catch(() => {});
-          } else {
-            video.pause();
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "25% 0px",
-        threshold: 1,
+      // Mobile: assign src immediately
+      if (isMobile && !video.src) {
+        video.src = video.dataset.src;
+        video.load();
       }
-    );
 
-    videos.forEach((v) => observer.observe(v));
-    return () => observer.disconnect();
-  }, []);
+      // Lazy load only desktop
+      if (!isMobile) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              const vid = entry.target;
+              if (!(vid instanceof HTMLVideoElement)) return;
 
-  // ---------------------------------------------------------
-  // 4) Mobile: active = closest to center
-  // ---------------------------------------------------------
+              if (entry.isIntersecting) {
+                if (!vid.src) {
+                  vid.src = vid.dataset.src;
+                  vid.load();
+                }
+                vid.play().catch(() => {});
+              } else {
+                vid.pause();
+              }
+            });
+          },
+          { root: null, rootMargin: "25% 0px", threshold: 1 }
+        );
+        observer.observe(video);
+      }
+
+      video.addEventListener("loadeddata", () => {
+        if (parentDiv) {
+          const placeholder = parentDiv.querySelector(".video-placeholder");
+          if (placeholder) placeholder.style.display = "none";
+        }
+        setLoadedItems((prev) => new Set(prev).add(video.dataset.src));
+      });
+    });
+  }, [isMobile]);
+
+  // Mobile: active = closest to center
   useEffect(() => {
     if (!isMobile || focusedItem) return;
-
     const items = containerRef.current?.querySelectorAll(".archive-item");
     if (!items) return;
 
@@ -162,36 +154,34 @@ export default function ArchivePage() {
           closest = archiveItems[i];
         }
       });
-
       setActiveItem(closest);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
-
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile, focusedItem]);
 
-  // ---------------------------------------------------------
-  // 5) Simple security features
-  // ---------------------------------------------------------
+  // Security
+  useEffect(() => {
+    const disableContext = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", disableContext);
+    return () => document.removeEventListener("contextmenu", disableContext);
+  }, []);
 
   useEffect(() => {
-  const disableContext = (e) => e.preventDefault();
-  document.addEventListener("contextmenu", disableContext);
-  return () => document.removeEventListener("contextmenu", disableContext);
-}, []);
+    const preventDrag = (e) => e.preventDefault();
+    document.addEventListener("dragstart", preventDrag);
+    return () => document.removeEventListener("dragstart", preventDrag);
+  }, []);
 
-useEffect(() => {
-  const preventDrag = (e) => e.preventDefault();
-  document.addEventListener("dragstart", preventDrag);
-  return () => document.removeEventListener("dragstart", preventDrag);
-}, []);
-
-  // ---------------------------------------------------------
   return (
     <>
-      <FocusLayer item={focusedItem} onClose={() => setFocusedItem(null)} />
+      <FocusLayer
+        item={focusedItem}
+        onClose={() => setFocusedItem(null)}
+        loadedItems={loadedItems}
+      />
 
       <main
         ref={containerRef}
@@ -202,7 +192,6 @@ useEffect(() => {
           md:grid-cols-3
           lg:grid-cols-5
           xl:grid-cols-5
-          items-center
           gap-12
           mt-50
           mx-6
@@ -214,7 +203,7 @@ useEffect(() => {
         {archiveItems.map((item, i) => (
           <div
             key={i}
-            className="archive-item relative cursor-pointer JUSTIFY"
+            className="archive-item relative cursor-pointer flex justify-center items-center"
             onMouseEnter={() => {
               if (focusedItem || isMobile) return;
               clearTimeout(hideTimeout.current);
@@ -229,32 +218,31 @@ useEffect(() => {
             }}
           >
             {item.type.toLowerCase() === "image" ? (
-              <div className="relative w-full bg-zinc-200 overflow-hidden">
+              <div className="relative bg-zinc-200 overflow-hidden">
                 <Image
                   src={item.src}
                   alt={item.alt}
                   width={item.width}
                   height={item.height}
-                  className="w-full h-auto object-cover"
+                  className="object-cover"
                   placeholder="blur"
                   blurDataURL="/placeholder.png"
                 />
               </div>
             ) : (
-              <video
-                data-src={item.src}
-                muted
-                loop
-                playsInline
-                width={item.width}
-                height={item.height}
-                preload="auto"
-                poster="/placeholder.png"
-                className="w-full h-auto object-cover"
-                controls={false}
-                disablePictureInPicture
-                controlsList="nodownload nofullscreen noplaybackrate"
-              />
+              <div className="relative bg-zinc-200 overflow-hidden">
+                {!loadedItems.has(item.src) && (
+                  <div className="absolute inset-0 bg-zinc-200 video-placeholder" />
+                )}
+                <video
+                  data-src={item.src}
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  className="object-cover"
+                />
+              </div>
             )}
           </div>
         ))}
