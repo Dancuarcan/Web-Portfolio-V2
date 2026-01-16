@@ -18,6 +18,8 @@ export default function ArchivePage() {
   const [isMobile, setIsMobile] = useState(false);
   const [loadedItems, setLoadedItems] = useState(new Set());
 
+  const videoCache = useRef(new Map());
+
   // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -95,14 +97,13 @@ export default function ArchivePage() {
       const parentDiv = video.parentElement;
 
       if (isMobile) {
-        // Mobile: asignar src cuando entra cerca del viewport
         const observer = new IntersectionObserver(
           (entries, obs) => {
             entries.forEach((entry) => {
               if (entry.isIntersecting && !video.src) {
                 video.src = video.dataset.src;
                 video.load();
-                obs.unobserve(video); // ya no observar
+                obs.unobserve(video);
               }
             });
           },
@@ -112,7 +113,6 @@ export default function ArchivePage() {
       }
 
       if (!isMobile) {
-        // Desktop lazy load
         const observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
@@ -135,13 +135,16 @@ export default function ArchivePage() {
         observer.observe(video);
       }
 
-      // Ocultar placeholder cuando el video pueda reproducirse
       video.addEventListener("canplaythrough", () => {
         if (parentDiv) {
           const placeholder = parentDiv.querySelector(".video-placeholder");
           if (placeholder) placeholder.style.display = "none";
         }
         setLoadedItems((prev) => new Set(prev).add(video.dataset.src));
+
+        if (!videoCache.current.has(video.dataset.src)) {
+          videoCache.current.set(video.dataset.src, video);
+        }
       });
     });
   }, [isMobile]);
@@ -187,28 +190,40 @@ export default function ArchivePage() {
     return () => document.removeEventListener("dragstart", preventDrag);
   }, []);
 
+  // Click handler para FocusLayer instantáneo
+  const handleClickItem = (item) => {
+    if (item.type.toLowerCase() === "video" && !loadedItems.has(item.src)) {
+      let vid;
+      if (videoCache.current.has(item.src)) {
+        vid = videoCache.current.get(item.src);
+      } else {
+        vid = document.createElement("video");
+        vid.src = item.src;
+        vid.muted = true;
+        vid.loop = true;
+        vid.playsInline = true;
+        vid.preload = "auto";
+        videoCache.current.set(item.src, vid);
+      }
+
+      setLoadedItems((prev) => new Set(prev).add(item.src));
+    }
+
+    setFocusedItem((prev) => (prev === item ? null : item));
+  };
+
   return (
     <>
       <FocusLayer
         item={focusedItem}
         onClose={() => setFocusedItem(null)}
         loadedItems={loadedItems}
+        videoCache={videoCache.current}
       />
 
       <main
         ref={containerRef}
-        className="
-          col-span-full
-          grid
-          sm:grid-cols-2
-          md:grid-cols-3
-          lg:grid-cols-5
-          xl:grid-cols-5
-          gap-12
-          mt-50
-          mx-6
-          pb-40
-        "
+        className="col-span-full grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-12 mt-50 mx-6 pb-40"
       >
         <MicrodataPanel data={focusedItem || activeItem} />
 
@@ -225,9 +240,7 @@ export default function ArchivePage() {
               if (focusedItem || isMobile) return;
               hideTimeout.current = setTimeout(() => setActiveItem(null), 120);
             }}
-            onClick={() => {
-              setFocusedItem((prev) => (prev === item ? null : item));
-            }}
+            onClick={() => handleClickItem(item)}
           >
             {item.type.toLowerCase() === "image" ? (
               <div className="relative bg-zinc-200 overflow-hidden">

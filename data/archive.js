@@ -207,6 +207,7 @@ export const archiveItems = [
     height: 1080,
     
   },
+  
   {
     type: "Video",
     src: "/archive/Videos/FLYER_COCODRILO_FEBRERO 6.mp4",
@@ -267,9 +268,9 @@ export const archiveItems = [
   },
   {
     type: "Video",
-    src: "/archive/Videos/FLYER_COCODRILO_ABRIL 16.mp4",
-    alt: "FLYER 12 | COCODRILO",
-    year: 2025,
+    src: "/archive/Videos/FLYER_COCODRILO_MAYO 22.mp4",
+    alt: "FLYER 14 | COCODRILO",
+    year: 2024,
     category: "ANIMATION",
     client: "COMMISSIONED W/ Folk Estudio",
     width: 1080,
@@ -391,9 +392,9 @@ export const archiveItems = [
   },
   {
     type: "Video",
-    src: "/archive/Videos/FLYER_COCODRILO_FEBRERO 14.mp4",
-    alt: "FLYER 5 | COCODRILO",
-    year: 2025,
+    src: "/archive/Videos/FLYER_COCODRILO_MAYO 30.mp4",
+    alt: "FLYER 15 | COCODRILO",
+    year: 2024,
     category: "ANIMATION",
     client: "COMMISSIONED W/ Folk Estudio",
     width: 1080,
@@ -519,6 +520,29 @@ export const archiveItems = [
   },
   {
     type: "image",
+    src: "/archive/images/photography_3.webp",
+    alt: "PHOTO DIARY | 3",
+    year: 2024,
+    category: "PHOTOGRAPHY",
+    client: "PERSONAL",
+    width: 1080,
+    height: 1080,
+    
+  },
+  {
+    type: "Video",
+    src: "/archive/Videos/FLYER_COCODRILO_FEBRERO 14.mp4",
+    alt: "FLYER 5 | COCODRILO",
+    year: 2025,
+    category: "ANIMATION",
+    client: "COMMISSIONED W/ Folk Estudio",
+    width: 1080,
+    height: 1080,
+    
+  },
+
+  {
+    type: "image",
     src: "/archive/images/poster_3.webp",
     alt: "BAUHAUS",
     year: 2023,
@@ -528,6 +552,18 @@ export const archiveItems = [
     height: 1080,
     
   },
+  {
+    type: "Video",
+    src: "/archive/Videos/FLYER_COCODRILO_ABRIL 16.mp4",
+    alt: "FLYER 12 | COCODRILO",
+    year: 2025,
+    category: "ANIMATION",
+    client: "COMMISSIONED W/ Folk Estudio",
+    width: 1080,
+    height: 1080,
+    
+  },
+
   {
     type: "image",
     src: "/archive/images/illustration_3.webp",
@@ -539,17 +575,7 @@ export const archiveItems = [
     height: 1080,
     
   },
-  {
-    type: "image",
-    src: "/archive/images/photography_3.webp",
-    alt: "PHOTO DIARY | 3",
-    year: 2024,
-    category: "PHOTOGRAPHY",
-    client: "PERSONAL",
-    width: 1080,
-    height: 1080,
-    
-  },
+
 
 ];
 

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-export default function FocusLayer({ item, onClose }) {
+export default function FocusLayer({ item, onClose, videoCache }) {
   const layerRef = useRef(null);
   const mediaRef = useRef(null);
   const videoRef = useRef(null);
@@ -54,7 +54,42 @@ export default function FocusLayer({ item, onClose }) {
   }, [item]);
 
   // ---------------------------------------------------------
-  // 🔊 AUDIO (video keeps playing)
+  // 🔄 Montar video desde cache sin alterar layout
+  // ---------------------------------------------------------
+  useEffect(() => {
+    if (!item || item.type.toLowerCase() !== "video") return;
+
+    const container = mediaRef.current;
+    if (!container) return;
+
+    // Limpiar video previo
+    container.querySelectorAll("video").forEach((v) => container.removeChild(v));
+
+    let video;
+    if (videoCache && videoCache.has(item.src)) {
+      // Clonar desde cache
+      video = videoCache.get(item.src).cloneNode(true);
+    } else {
+      // Si no existe en cache, crear uno nuevo y guardarlo
+      video = document.createElement("video");
+      video.src = item.src;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = "auto";
+      if (videoCache) videoCache.set(item.src, video);
+    }
+
+    video.className = "w-auto h-auto max-h-[75vh] max-w-[90vw] object-contain";
+    container.appendChild(video);
+    videoRef.current = video;
+
+    // Autoplay
+    video.play().catch(() => {});
+  }, [item, videoCache]);
+
+  // ---------------------------------------------------------
+  // 🔊 AUDIO fade-in / fade-out
   // ---------------------------------------------------------
   useEffect(() => {
     if (!item || item.type.toLowerCase() !== "video") return;
@@ -98,27 +133,19 @@ export default function FocusLayer({ item, onClose }) {
     >
       <div
         ref={mediaRef}
-        className="max-w-[90vw] max-h-[75vh]"
+        className="flex items-center justify-center max-w-[90vw] max-h-[75vh]"
       >
-        {item.type.toLowerCase() === "image" ? (
+        {item.type.toLowerCase() === "image" && (
           <Image
             src={item.src}
             alt={item.alt}
             width={item.width}
             height={item.height}
-            className="w-auto h-auto max-h-[75vh] object-contain"
+            className="w-auto h-auto max-h-[75vh] max-w-[90vw] object-contain"
             priority
           />
-        ) : (
-          <video
-            ref={videoRef}
-            src={item.src}
-            autoPlay
-            loop
-            playsInline
-            className="w-auto h-auto max-h-[75vh] object-contain"
-          />
         )}
+        {/* El video se monta dinámicamente desde cache en useEffect */}
       </div>
     </div>
   );
