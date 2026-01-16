@@ -94,14 +94,25 @@ export default function ArchivePage() {
     videos.forEach((video) => {
       const parentDiv = video.parentElement;
 
-      // Mobile: assign src immediately
-      if (isMobile && !video.src) {
-        video.src = video.dataset.src;
-        video.load();
+      if (isMobile) {
+        // Mobile: asignar src cuando entra cerca del viewport
+        const observer = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting && !video.src) {
+                video.src = video.dataset.src;
+                video.load();
+                obs.unobserve(video); // ya no observar
+              }
+            });
+          },
+          { root: null, rootMargin: "200% 0px", threshold: 0.01 }
+        );
+        observer.observe(video);
       }
 
-      // Lazy load only desktop
       if (!isMobile) {
+        // Desktop lazy load
         const observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
@@ -124,7 +135,8 @@ export default function ArchivePage() {
         observer.observe(video);
       }
 
-      video.addEventListener("loadeddata", () => {
+      // Ocultar placeholder cuando el video pueda reproducirse
+      video.addEventListener("canplaythrough", () => {
         if (parentDiv) {
           const placeholder = parentDiv.querySelector(".video-placeholder");
           if (placeholder) placeholder.style.display = "none";
